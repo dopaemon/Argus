@@ -54,4 +54,22 @@ func main() {
 	} else {
 		fmt.Println("Err:", err)
 	}
+
+	if total, err := libutils.GetDiskTotal("/"); err == nil {
+		fmt.Println("Disk Space:", total)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if usage, err := libutils.GetDiskUsed("/"); err == nil {
+		fmt.Println("Disk Usage:", usage)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if free, err := libutils.GetDiskFree("/"); err == nil {
+		fmt.Println("Disk Free:", free)
+	} else {
+		fmt.Println("Err:", err)
+	}
 }
