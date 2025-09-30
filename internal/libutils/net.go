@@ -35,7 +35,7 @@ func GetPrimaryInterface() (string, error) {
 	}
 
 	for _, iface := range interfaces {
-		if iface.Flags&psnet.FlagUp != 0 {
+		if iface.Flags&net.FlagUp != 0 {
 			return iface.Name, nil
 		}
 	}
