@@ -7,11 +7,14 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"fmt"
+	"errors"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -85,7 +88,19 @@ func InitDB() {
 		log.Fatal("failed to create db folder:", err)
 	}
 
-	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold: time.Second,
+			LogLevel:      logger.Silent,
+			Colorful:      true,
+		},
+	)
+
+
+	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		log.Fatal("failed to connect database: ", err)
 	}
@@ -96,7 +111,7 @@ func InitDB() {
 
 	DB.Exec("PRAGMA journal_mode = WAL;")
 
-	log.Println("SQLite DB initialized at:", dbPath)
+	// log.Println("SQLite DB initialized at:", dbPath)
 }
 
 func SaveMetrics(metric *Metrics) error {
@@ -130,21 +145,34 @@ func GetMetricsByIP(ip string) (*Metrics, error) {
 	return &metric, nil
 }
 
-func CreateUser(username, plainPassword string) (*User, error) {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(plainPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
+func CreateUser(username, password string) (User, error) {
+    var existing User
+    err := DB.First(&existing).Error
+    if err == nil {
+        return User{}, fmt.Errorf("Can't Create Other User")
+    }
+    if !errors.Is(err, gorm.ErrRecordNotFound) {
+        return User{}, err
+    }
 
-	user := User{
-		Username: username,
-		Password: string(hashed),
-		APIKey:   generateAPIKey(),
-	}
-	if err := DB.Create(&user).Error; err != nil {
-		return nil, err
-	}
-	return &user, nil
+    hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+    if err != nil {
+        return User{}, err
+    }
+
+    apiKey := generateAPIKey()
+
+    user := User{
+        Username: username,
+        Password: string(hashed),
+        APIKey:   apiKey,
+    }
+
+    if err := DB.Create(&user).Error; err != nil {
+        return User{}, err
+    }
+
+    return user, nil
 }
 
 func Authenticate(username, plainPassword string) bool {

@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
-	"strings"
 
 	"github.com/dopaemon/artus/internal/db"
 )
@@ -13,19 +10,42 @@ import (
 func main() {
 	db.InitDB()
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Username: ")
-	u, _ := reader.ReadString('\n')
-	u = strings.TrimSpace(u)
+	var username, password string
 
-	fmt.Print("Password: ")
-	p, _ := reader.ReadString('\n')
-	p = strings.TrimSpace(p)
-
-	user, err := db.CreateUser(u, p)
+	users, err := db.GetAllUsers()
 	if err != nil {
-		log.Fatalf("CreateUser error: %v", err)
+		log.Fatal("Lỗi truy vấn user:", err)
 	}
 
-	fmt.Printf("User created: %s\nAPIKey: %s\n", user.Username, user.APIKey)
+	if len(users) == 0 {
+		fmt.Println("Chưa có tài khoản, vui lòng đăng ký")
+
+		fmt.Print("Nhập username: ")
+		fmt.Scan(&username)
+
+		fmt.Print("Nhập password: ")
+		fmt.Scan(&password)
+
+		u, err := db.CreateUser(username, password)
+		if err != nil {
+			log.Fatal("Không tạo được user:", err)
+		}
+
+		fmt.Println("Tạo tài khoản thành công")
+		fmt.Println("API Key:", u.APIKey)
+	} else {
+		fmt.Println("Đăng nhập")
+
+		fmt.Print("Username: ")
+		fmt.Scan(&username)
+
+		fmt.Print("Password: ")
+		fmt.Scan(&password)
+
+		if db.Authenticate(username, password) {
+			fmt.Println("Đăng nhập thành công")
+		} else {
+			fmt.Println("Sai username hoặc password")
+		}
+	}
 }
