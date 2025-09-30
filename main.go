@@ -1,1 +1,1 @@
-cmd/client/main.go
+cmd/server/main.go
