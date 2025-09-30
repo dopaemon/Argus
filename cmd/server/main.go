@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/dopaemon/artus/internal/config"
 	"github.com/dopaemon/artus/internal/db"
 )
 
@@ -44,8 +45,15 @@ func main() {
 
 		if db.Authenticate(username, password) {
 			fmt.Println("Đăng nhập thành công")
+			config.Login = true
 		} else {
 			fmt.Println("Sai username hoặc password")
 		}
+	}
+
+	if (config.Login) {
+		fmt.Println("You Already Login !!!")
+		config.APIKey, _ = db.GetAPIKey()
+		fmt.Println(config.APIKey)
 	}
 }

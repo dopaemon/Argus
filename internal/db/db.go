@@ -199,3 +199,12 @@ func ChangePassword(username, newPlainPassword string) error {
 	}
 	return DB.Model(&User{}).Where("username = ?", username).Update("password", string(hashed)).Error
 }
+
+func GetAPIKey() (string, error) {
+	var user User
+	err := DB.Select("api_key").First(&user).Error
+	if err != nil {
+		return "", err
+	}
+	return user.APIKey, nil
+}
