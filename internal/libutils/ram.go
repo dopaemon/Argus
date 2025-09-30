@@ -6,12 +6,31 @@ import (
 	"github.com/shirou/gopsutil/v4/mem"
 )
 
+func formatBytes(bytes uint64) string {
+	const (
+		MB = 1024 * 1024
+		GB = 1024 * MB
+		TB = 1024 * GB
+	)
+
+	switch {
+	case bytes >= TB:
+		return fmt.Sprintf("%.2f TB", float64(bytes)/float64(TB))
+	case bytes >= GB:
+		return fmt.Sprintf("%.2f GB", float64(bytes)/float64(GB))
+	case bytes >= MB:
+		return fmt.Sprintf("%.2f MB", float64(bytes)/float64(MB))
+	default:
+		return fmt.Sprintf("%d Bytes", bytes)
+	}
+}
+
 func GetTotalRAM() (string, error) {
 	vm, err := mem.VirtualMemory()
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%.2f GB", float64(vm.Total)/(1024*1024*1024)), nil
+	return formatBytes(vm.Total), nil
 }
 
 func GetUsedRAM() (string, error) {
@@ -19,7 +38,7 @@ func GetUsedRAM() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%.2f GB", float64(vm.Used)/(1024*1024*1024)), nil
+	return formatBytes(vm.Used), nil
 }
 
 func GetFreeRAM() (string, error) {
@@ -27,7 +46,7 @@ func GetFreeRAM() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%.2f GB", float64(vm.Available)/(1024*1024*1024)), nil
+	return formatBytes(vm.Available), nil
 }
 
 func GetRAMUsagePercent() (string, error) {
