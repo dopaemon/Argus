@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package metrics;
+
+option go_package = "github.com/dopaemon/artus/internal/gRPC/metrics;metrics";
+
+service MetricsService {
+	rpc SendMetrics(MetricsRequest) returns (MetricsResponse);
+}
+
+message MetricsRequest {
+	string client_ip = 1;
+	string cpu_name = 2;
+	string logical_core = 3;
+	string physical_core = 4;
+	string cpu_usage = 5;
+
+	string total_ram = 6;
+	string used_ram = 7;
+	string free_ram = 8;
+	string ram_usage = 9;
+
+	string disk_total = 10;
+	string disk_used = 11;
+	string disk_free = 12;
+	string disk_usage = 13;
+
+	string inbound = 14;
+	string outbound = 15;
+	string packets_in = 16;
+	string packets_out = 17;
+
+	string hostname = 18;
+	string os = 19;
+	string platform = 20;
+	string kernel_version = 21;
+	string uptime = 22;
+	string boot_time = 23;
+}
+
+message MetricsResponse {
+	bool success = 1;
+	string message = 2;
+}
