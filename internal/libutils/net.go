@@ -29,7 +29,7 @@ func formatNetBytes(bytes uint64) string {
 }
 
 func GetPrimaryInterface() (string, error) {
-	interfaces, err := psnet.Interfaces()
+	interfaces, err := net.Interfaces()
 	if err != nil {
 		return "", err
 	}
