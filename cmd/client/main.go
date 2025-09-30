@@ -1,170 +1,79 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"log"
+	"time"
 
 	"github.com/dopaemon/artus/internal/libutils"
+	"github.com/dopaemon/artus/internal/gRPC/metrics"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
+func getString(fn func() (string, error)) string {
+	if val, err := fn(); err == nil {
+		return val
+	}
+	return ""
+}
+
+func sendMetrics(client metrics.MetricsServiceClient, apiKey string) {
+	iface, _ := libutils.GetPrimaryInterface()
+
+	req := &metrics.MetricsRequest{
+		ClientIp:      getString(libutils.GetHostIP),
+		CpuName:       getString(libutils.GetCPUName),
+		LogicalCore:   getString(libutils.GetLogicalCores),
+		PhysicalCore:  getString(libutils.GetPhysicalCores),
+		CpuUsage:      getString(libutils.GetCPUUsage),
+		TotalRam:      getString(libutils.GetTotalRAM),
+		UsedRam:       getString(libutils.GetUsedRAM),
+		FreeRam:       getString(libutils.GetFreeRAM),
+		RamUsage:      getString(libutils.GetRAMUsagePercent),
+		DiskTotal:     getString(func() (string, error) { return libutils.GetDiskTotal("/") }),
+		DiskUsed:      getString(func() (string, error) { return libutils.GetDiskUsed("/") }),
+		DiskFree:      getString(func() (string, error) { return libutils.GetDiskFree("/") }),
+		DiskUsage:     getString(func() (string, error) { return libutils.GetDiskUsagePercent("/") }),
+		Inbound:       getString(func() (string, error) { return libutils.GetNetBytesRecv(iface) }),
+		Outbound:      getString(func() (string, error) { return libutils.GetNetBytesSent(iface) }),
+		PacketsIn:     getString(func() (string, error) { return libutils.GetNetPacketsRecv(iface) }),
+		PacketsOut:    getString(func() (string, error) { return libutils.GetNetPacketsSent(iface) }),
+		Hostname:      getString(libutils.GetHostName),
+		Os:            getString(libutils.GetOS),
+		Platform:      getString(libutils.GetPlatform),
+		KernelVersion: getString(libutils.GetKernelVersion),
+		Uptime:        getString(libutils.GetUptime),
+		BootTime:      getString(libutils.GetBootTime),
+	}
+
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "x-api-key", apiKey)
+
+	go func() {
+		resp, err := client.SendMetrics(ctx, req)
+		if err != nil {
+			log.Printf("failed to send metrics: %v", err)
+		} else {
+			log.Printf("metrics sent successfully: %v", resp.Message)
+		}
+	}()
+}
+
 func main() {
-	if name, err := libutils.GetCPUName(); err == nil {
-		fmt.Println("CPU Name:", name)
-	} else {
-		fmt.Println("Err:", err)
-	}
+	apiKey := "2be97c1902efce4fcd93deea058102574f6a895f323762c9c88d94a0e6ad789b"
 
-	if cores, err := libutils.GetLogicalCores(); err == nil {
-		fmt.Println("CPU Count Logical Core:", cores)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if cores, err := libutils.GetPhysicalCores(); err == nil {
-		fmt.Println("CPU Count Physial Core:", cores)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if usage, err := libutils.GetCPUUsage(); err == nil {
-		fmt.Println("CPU Usage:", usage)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if total, err := libutils.GetTotalRAM(); err == nil {
-		fmt.Println("Ram Total:", total)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if used, err := libutils.GetUsedRAM(); err == nil {
-		fmt.Println("Ram Usage:", used)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if free, err := libutils.GetFreeRAM(); err == nil {
-		fmt.Println("Ram Free:", free)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if usage, err := libutils.GetRAMUsagePercent(); err == nil {
-		fmt.Println("Ram Usage %:", usage)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if total, err := libutils.GetDiskTotal("/"); err == nil {
-		fmt.Println("Disk Space:", total)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if usage, err := libutils.GetDiskUsed("/"); err == nil {
-		fmt.Println("Disk Usage:", usage)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if free, err := libutils.GetDiskFree("/"); err == nil {
-		fmt.Println("Disk Free:", free)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if usage, err := libutils.GetDiskUsagePercent("/"); err == nil {
-		fmt.Println("Disk Usage %:", usage)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	iface, err := libutils.GetPrimaryInterface()
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
-		fmt.Println("Err:", err)
+		log.Fatalf("failed to connect gRPC server: %v", err)
 	}
+	defer conn.Close()
 
-	if sent, err := libutils.GetNetBytesSent(iface); err == nil {
-		fmt.Println("Bytes sent:", sent)
-	} else {
-		fmt.Println("Err:", err)
-	}
+	client := metrics.NewMetricsServiceClient(conn)
 
-	if recv, err := libutils.GetNetBytesRecv(iface); err == nil {
-		fmt.Println("Bytes received:", recv)
-	} else {
-		fmt.Println("Err:", err)
-	}
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 
-	if psent, err := libutils.GetNetPacketsSent(iface); err == nil {
-		fmt.Println("Packets sent:", psent)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if precv, err := libutils.GetNetPacketsRecv(iface); err == nil {
-		fmt.Println("Packets received:", precv)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if hostname, err := libutils.GetHostName(); err == nil {
-		fmt.Println("Hostname:", hostname)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if osName, err := libutils.GetOS(); err == nil {
-		fmt.Println("OS:", osName)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if platform, err := libutils.GetPlatform(); err == nil {
-		fmt.Println("Platform:", platform)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if kernel, err := libutils.GetKernelVersion(); err == nil {
-		fmt.Println("Kernel Version:", kernel)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if uptime, err := libutils.GetUptime(); err == nil {
-		fmt.Println("Uptime:", uptime)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if boottime, err := libutils.GetBootTime(); err == nil {
-		fmt.Println("Boot Time:", boottime)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if load1, err := libutils.GetLoad1(); err == nil {
-		fmt.Println("Load 1m:", load1)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if load5, err := libutils.GetLoad5(); err == nil {
-		fmt.Println("Load 5m:", load5)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if load15, err := libutils.GetLoad15(); err == nil {
-		fmt.Println("Load 15m:", load15)
-	} else {
-		fmt.Println("Err:", err)
-	}
-
-	if misc, err := libutils.GetMiscLoad(); err == nil {
-		fmt.Println("Misc:", misc)
-	} else {
-		fmt.Println("Err:", err)
+	for range ticker.C {
+		sendMetrics(client, apiKey)
 	}
 }
