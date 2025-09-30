@@ -110,8 +110,6 @@ func InitDB() {
 	}
 
 	DB.Exec("PRAGMA journal_mode = WAL;")
-
-	// log.Println("SQLite DB initialized at:", dbPath)
 }
 
 func SaveMetrics(metric *Metrics) error {
