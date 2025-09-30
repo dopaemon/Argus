@@ -72,4 +72,10 @@ func main() {
 	} else {
 		fmt.Println("Err:", err)
 	}
+
+	if usage, err := libutils.GetDiskUsagePercent("/"); err == nil {
+		fmt.Println("Disk Usage %:", usage)
+	} else {
+		fmt.Println("Err:", err)
+	}
 }
