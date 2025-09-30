@@ -31,67 +31,74 @@ func formatNetBytes(bytes uint64) string {
 func GetPrimaryInterface() (string, error) {
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get network interfaces: %v", err)
 	}
 
 	for _, iface := range interfaces {
-		if iface.Flags&net.FlagUp != 0 {
+		if len(iface.Addrs) > 0 {
 			return iface.Name, nil
 		}
 	}
 
-	return "", fmt.Errorf("không tìm thấy interface đang hoạt động")
+	return "", fmt.Errorf("no active network interface found")
 }
-
 
 func GetNetBytesSent(iface string) (string, error) {
 	counters, err := net.IOCounters(true)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get network IO counters: %v", err)
 	}
+
 	for _, c := range counters {
 		if c.Name == iface {
 			return formatNetBytes(c.BytesSent), nil
 		}
 	}
-	return "", fmt.Errorf("không tìm thấy interface %s", iface)
+
+	return "", fmt.Errorf("interface %s not found", iface)
 }
 
 func GetNetBytesRecv(iface string) (string, error) {
 	counters, err := net.IOCounters(true)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get network IO counters: %v", err)
 	}
+
 	for _, c := range counters {
 		if c.Name == iface {
 			return formatNetBytes(c.BytesRecv), nil
 		}
 	}
-	return "", fmt.Errorf("không tìm thấy interface %s", iface)
+
+	return "", fmt.Errorf("interface %s not found", iface)
 }
 
 func GetNetPacketsSent(iface string) (string, error) {
 	counters, err := net.IOCounters(true)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get network IO counters: %v", err)
 	}
+
 	for _, c := range counters {
 		if c.Name == iface {
 			return fmt.Sprintf("%d packets", c.PacketsSent), nil
 		}
 	}
-	return "", fmt.Errorf("không tìm thấy interface %s", iface)
+
+	return "", fmt.Errorf("interface %s not found", iface)
 }
 
 func GetNetPacketsRecv(iface string) (string, error) {
 	counters, err := net.IOCounters(true)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get network IO counters: %v", err)
 	}
+
 	for _, c := range counters {
 		if c.Name == iface {
 			return fmt.Sprintf("%d packets", c.PacketsRecv), nil
 		}
 	}
-	return "", fmt.Errorf("không tìm thấy interface %s", iface)
+
+	return "", fmt.Errorf("interface %s not found", iface)
 }
