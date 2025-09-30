@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package chat;
+
+// quan trọng: option go_package -> chỉnh theo module path của bạn
+option go_package = "example.com/chat/gen;gen";
+
+service ChatService {
+  // unary RPC đơn giản
+  rpc SendMessage (MessageRequest) returns (MessageResponse);
+}
+
+message MessageRequest {
+  string user = 1;
+  string text = 2;
+}
+
+message MessageResponse {
+  string reply = 1;
+}
+
