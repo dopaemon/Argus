@@ -30,4 +30,28 @@ func main() {
 	} else {
 		fmt.Println("Err:", err)
 	}
+
+	if total, err := libutils.GetTotalRAM(); err == nil {
+		fmt.Println("Ram Total:", total)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if used, err := libutils.GetUsedRAM(); err == nil {
+		fmt.Println("Ram Usage:", used)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if free, err := libutils.GetFreeRAM(); err == nil {
+		fmt.Println("Ram Free:", free)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if usage, err := libutils.GetRAMUsagePercent(); err == nil {
+		fmt.Println("Ram Usage %:", usage)
+	} else {
+		fmt.Println("Err:", err)
+	}
 }
