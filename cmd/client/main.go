@@ -107,4 +107,64 @@ func main() {
 	} else {
 		fmt.Println("Err:", err)
 	}
+
+	if hostname, err := libutils.GetHostName(); err == nil {
+		fmt.Println("Hostname:", hostname)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if osName, err := libutils.GetOS(); err == nil {
+		fmt.Println("OS:", osName)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if platform, err := libutils.GetPlatform(); err == nil {
+		fmt.Println("Platform:", platform)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if kernel, err := libutils.GetKernelVersion(); err == nil {
+		fmt.Println("Kernel Version:", kernel)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if uptime, err := libutils.GetUptime(); err == nil {
+		fmt.Println("Uptime:", uptime)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if boottime, err := libutils.GetBootTime(); err == nil {
+		fmt.Println("Boot Time:", boottime)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if load1, err := libutils.GetLoad1(); err == nil {
+		fmt.Println("Load 1m:", load1)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if load5, err := libutils.GetLoad5(); err == nil {
+		fmt.Println("Load 5m:", load5)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if load15, err := libutils.GetLoad15(); err == nil {
+		fmt.Println("Load 15m:", load15)
+	} else {
+		fmt.Println("Err:", err)
+	}
+
+	if misc, err := libutils.GetMiscLoad(); err == nil {
+		fmt.Println("Misc:", misc)
+	} else {
+		fmt.Println("Err:", err)
+	}
 }
