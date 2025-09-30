@@ -2,6 +2,7 @@ package libutils
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/shirou/gopsutil/v4/net"
 )
@@ -34,14 +35,41 @@ func GetPrimaryInterface() (string, error) {
 		return "", fmt.Errorf("failed to get network interfaces: %v", err)
 	}
 
+	var fallback string
+
 	for _, iface := range interfaces {
-		if len(iface.Addrs) > 0 {
-			return iface.Name, nil
+		for _, addr := range iface.Addrs {
+			if addr.Addr == "127.0.0.1/8" || addr.Addr == "::1/128" {
+				continue
+			}
+
+			if containsIfaceName(iface.Name) {
+				return iface.Name, nil
+			}
+
+			if fallback == "" {
+				fallback = iface.Name
+			}
 		}
+	}
+
+	if fallback != "" {
+		return fallback, nil
 	}
 
 	return "", fmt.Errorf("no active network interface found")
 }
+
+func containsIfaceName(name string) bool {
+	patterns := []string{"eth", "en", "wlan", "Wi-Fi", "Ethernet"}
+	for _, p := range patterns {
+		if strings.Contains(name, p) {
+			return true
+		}
+	}
+	return false
+}
+
 
 func GetNetBytesSent(iface string) (string, error) {
 	counters, err := net.IOCounters(true)
